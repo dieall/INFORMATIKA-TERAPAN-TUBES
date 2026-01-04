@@ -44,13 +44,32 @@ class SecurityController extends Controller
         ));
     }
 
-    public function auditTrail()
+    public function auditTrail(Request $request)
     {
-        $auditTrails = AuditTrail::with('user')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $query = AuditTrail::with('user')
+            ->orderBy('created_at', 'desc');
 
-        return view('security.audit-trail', compact('auditTrails'));
+        // Filter by action (login, logout, create, update, delete)
+        if ($request->filled('action_filter')) {
+            $query->where('action', $request->action_filter);
+        }
+
+        // Filter by user
+        if ($request->filled('user_filter')) {
+            $query->where('user_id', $request->user_filter);
+        }
+
+        // Search by IP address
+        if ($request->filled('ip_search')) {
+            $query->where('ip_address', 'like', '%' . $request->ip_search . '%');
+        }
+
+        $auditTrails = $query->paginate(25);
+
+        // Get all users for filter dropdown
+        $users = User::orderBy('name')->get();
+
+        return view('security.audit-trail', compact('auditTrails', 'users'));
     }
 
     public function riskAnalysis()
@@ -110,5 +129,116 @@ class SecurityController extends Controller
             ->paginate(15);
 
         return view('security.users', compact('users'));
+    }
+
+    /**
+     * Show critical security events and failed login attempts
+     */
+    public function criticalEvents(Request $request)
+    {
+        $query = SecurityLog::orderBy('created_at', 'desc');
+
+        // Filter by severity
+        if ($request->filled('severity')) {
+            $query->where('severity', $request->severity);
+        } else {
+            // Default: show critical dan high
+            $query->whereIn('severity', ['critical', 'high']);
+        }
+
+        // Filter by event type
+        if ($request->filled('event_type')) {
+            $query->where('event_type', $request->event_type);
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $criticalEvents = $query->paginate(30);
+
+        // Statistics
+        $stats = [
+            'critical_count' => SecurityLog::where('severity', 'critical')
+                ->where('created_at', '>=', Carbon::now()->subDays(30))
+                ->count(),
+            'high_count' => SecurityLog::where('severity', 'high')
+                ->where('created_at', '>=', Carbon::now()->subDays(30))
+                ->count(),
+            'failed_logins' => SecurityLog::where('event_type', 'failed_login')
+                ->where('created_at', '>=', Carbon::now()->subDays(30))
+                ->count(),
+            'today_critical' => SecurityLog::where('severity', 'critical')
+                ->whereDate('created_at', Carbon::today())
+                ->count(),
+        ];
+
+        // Top IPs dengan failed attempts
+        $topFailedIPs = SecurityLog::where('event_type', 'failed_login')
+            ->where('created_at', '>=', Carbon::now()->subDays(7))
+            ->select('ip_address', DB::raw('COUNT(*) as attempt_count'))
+            ->groupBy('ip_address')
+            ->orderBy('attempt_count', 'desc')
+            ->limit(10)
+            ->get();
+
+        return view('security.critical-events', compact(
+            'criticalEvents',
+            'stats',
+            'topFailedIPs'
+        ));
+    }
+
+    /**
+     * Show failed login attempts with detailed tracking
+     */
+    public function failedAttempts(Request $request)
+    {
+        $query = SecurityLog::where('event_type', 'failed_login')
+            ->orderBy('created_at', 'desc');
+
+        // Filter by IP address
+        if ($request->filled('ip_search')) {
+            $query->where('ip_address', 'like', '%' . $request->ip_search . '%');
+        }
+
+        // Filter by email/resource
+        if ($request->filled('email_search')) {
+            $query->where('resource_id', 'like', '%' . $request->email_search . '%');
+        }
+
+        // Filter by severity
+        if ($request->filled('severity')) {
+            $query->where('severity', $request->severity);
+        }
+
+        $failedAttempts = $query->paginate(30);
+
+        // Get failed attempt trends
+        $failedTrends = SecurityLog::where('event_type', 'failed_login')
+            ->where('created_at', '>=', Carbon::now()->subDays(7))
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->orderBy('date', 'desc')
+            ->get();
+
+        // Top emails with most failed attempts
+        $topFailedEmails = SecurityLog::where('event_type', 'failed_login')
+            ->where('created_at', '>=', Carbon::now()->subDays(7))
+            ->select('resource_id', DB::raw('COUNT(*) as attempt_count'))
+            ->groupBy('resource_id')
+            ->orderBy('attempt_count', 'desc')
+            ->limit(10)
+            ->get();
+
+        return view('security.failed-attempts', compact(
+            'failedAttempts',
+            'failedTrends',
+            'topFailedEmails'
+        ));
     }
 }

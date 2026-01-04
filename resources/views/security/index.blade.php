@@ -5,6 +5,49 @@
 
 @section('content')
 <div class="container-fluid">
+    <!-- Quick Access Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <a href="{{ route('security.critical-events') }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm bg-danger bg-opacity-10 border-start border-danger border-5" style="cursor: pointer; transition: all 0.3s;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-danger mb-1">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>Critical Events
+                                </h6>
+                                <p class="text-muted mb-0 small">Monitor aktivitas kritis dan ancaman sistem</p>
+                            </div>
+                            <div class="text-danger" style="font-size: 2rem;">
+                                <i class="bi bi-arrow-right-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-6">
+            <a href="{{ route('security.failed-attempts') }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm bg-warning bg-opacity-10 border-start border-warning border-5" style="cursor: pointer; transition: all 0.3s;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-warning mb-1">
+                                    <i class="bi bi-shield-lock me-2"></i>Failed Login Attempts
+                                </h6>
+                                <p class="text-muted mb-0 small">Track percobaan login gagal dan brute force attacks</p>
+                            </div>
+                            <div class="text-warning" style="font-size: 2rem;">
+                                <i class="bi bi-arrow-right-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
     <!-- Statistics Cards -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">

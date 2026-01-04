@@ -36,6 +36,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [SecurityController::class, 'index'])->name('index');
         Route::get('/audit-trail', [SecurityController::class, 'auditTrail'])->name('audit-trail');
         Route::get('/risk-analysis', [SecurityController::class, 'riskAnalysis'])->name('risk-analysis');
+        Route::get('/critical-events', [SecurityController::class, 'criticalEvents'])->name('critical-events');
+        Route::get('/failed-attempts', [SecurityController::class, 'failedAttempts'])->name('failed-attempts');
         Route::get('/users', [SecurityController::class, 'users'])->name('users');
     });
     

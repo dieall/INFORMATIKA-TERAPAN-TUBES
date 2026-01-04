@@ -107,9 +107,9 @@ class SecurityController extends Controller
             ->get();
 
         // User Activity Analysis
-        $userActivity = User::withCount(['securityLogs' => function($query) {
-                $query->where('created_at', '>=', Carbon::now()->subDays(7));
-            }])
+        $userActivity = User::withCount(['securityLogs' => function ($query) {
+            $query->where('created_at', '>=', Carbon::now()->subDays(7));
+        }])
             ->orderBy('security_logs_count', 'desc')
             ->limit(10)
             ->get();

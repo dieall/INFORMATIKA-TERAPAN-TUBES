@@ -21,21 +21,21 @@ class LogFailedLogin
     {
         $ipAddress = $this->request->ip();
         $userAgent = $this->request->userAgent();
-        
+
         // Ambil email dari credentials
         $email = $event->credentials['email'] ?? 'unknown';
-        
+
         // Hitung failed attempts dari IP ini di last 30 menit
         $recentFailedAttempts = SecurityLog::where('ip_address', $ipAddress)
             ->where('event_type', 'failed_login')
             ->where('created_at', '>=', now()->subMinutes(30))
             ->count();
-        
+
         // Increment failed attempts
         $failedAttemptCount = $recentFailedAttempts + 1;
-        
+
         // Tentukan severity berdasarkan jumlah attempts
-        $severity = match(true) {
+        $severity = match (true) {
             $failedAttemptCount >= 5 => 'critical',
             $failedAttemptCount >= $this->threshold => 'high',
             default => 'medium'

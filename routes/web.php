@@ -18,19 +18,19 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/home', [DashboardController::class, 'index'])->name('home');
-    
+
     // Health Data Management
     Route::resource('health-data', HealthDataController::class)->parameters([
         'health-data' => 'healthData'
     ]);
-    
+
     // Data Quality & Governance
     Route::prefix('data-quality')->name('data-quality.')->group(function () {
         Route::get('/', [DataQualityController::class, 'index'])->name('index');
         Route::post('/validate', [DataQualityController::class, 'runValidation'])->name('validate');
         Route::get('/report', [DataQualityController::class, 'report'])->name('report');
     });
-    
+
     // Security & User Management
     Route::prefix('security')->name('security.')->group(function () {
         Route::get('/', [SecurityController::class, 'index'])->name('index');
@@ -40,7 +40,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/failed-attempts', [SecurityController::class, 'failedAttempts'])->name('failed-attempts');
         Route::get('/users', [SecurityController::class, 'users'])->name('users');
     });
-    
+
     // User Management
     Route::resource('users', UserController::class);
 });
